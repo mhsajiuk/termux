@@ -344,19 +344,150 @@ python sysinfo.py --ping
 ```
 untuk cek apakah device bisa reach internet.
 
+### **video_clipper.py: Error "No module named 'whisper'"**
+```bash
+pip install openai-whisper
+```
+Proses install cukup lama karena download PyTorch (~500MB). Pastikan storage cukup.
+
+### **video_clipper.py: Proses transkripsi sangat lambat**
+Normal di HP Android. Estimasi waktu:
+- Video 5 menit → ~10-15 menit proses (model small)
+- Video 10 menit → ~20-30 menit proses
+
+Pastikan HP tidak sleep/lock selama proses berjalan. Bisa pakai:
+```bash
+termux-wake-lock
+python video_clipper.py "URL"
+```
+
+### **video_clipper.py: Error "killed" saat transkripsi**
+HP kehabisan RAM. Solusi:
+- Tutup semua aplikasi lain
+- Ganti ke model lebih kecil: `--model base` atau `--model tiny`
+- Coba video yang lebih pendek dulu
+
+### **video_clipper.py: Subtitle tidak muncul di video**
+FFmpeg mungkin tidak support filter subtitles. Pakai `--no-subtitle` dan buka file `.srt` terpisah dengan video player yang support subtitle eksternal.
+
 ---
 
 ## 📝 Requirements
 
 - **Termux** (Download dari [F-Droid](https://f-droid.org/packages/com.termux/) atau Play Store)
 - **Python 3.x** (auto-install via `pkg install python`)
-- **FFmpeg** (wajib buat merge video+audio)
+- **FFmpeg** (wajib buat merge video+audio & export clip)
 - **zbar** (wajib buat QR code reader)
 - **termux-api** (wajib buat fitur baterai & WiFi di sysinfo.py)
 - **yt-dlp** (auto-install via requirements.txt)
 - **Pillow** (buat ASCII art & QR code)
 - **qrcode** (buat generate QR)
 - **pyzbar** (buat decode QR)
+- **openai-whisper** (wajib buat video_clipper.py — speech-to-text offline)
+
+---
+
+## 7️⃣ ✂️ Video Clipper Otomatis (video_clipper.py)
+
+Auto-detect bagian paling menarik dari video YouTube, potong jadi banyak clip pendek, dan tambahkan subtitle otomatis — semua dari satu perintah! Cocok buat bikin konten highlight, short-form video, atau reels.
+
+### **✨ Fitur:**
+ * **🔗 YouTube Ready:** Tinggal paste URL, langsung diproses
+ * **📁 File Lokal:** Support video dari penyimpanan HP
+ * **🧠 Auto-Detect Highlight:** Analisis transcript untuk cari momen paling menarik berdasarkan kata kunci, kepadatan bicara, dan engagement
+ * **✂️ Auto-Crop:** Potong video jadi beberapa clip sesuai highlight yang ditemukan
+ * **📝 Subtitle Otomatis:** Transkripsi pakai Whisper (speech-to-text offline), subtitle di-burn langsung ke video
+ * **🌐 Multi-bahasa:** Auto-detect bahasa, bisa paksa bahasa Indonesia/Inggris/dll
+ * **⚙️ Kustomisasi:** Atur jumlah clip, durasi min/max, model Whisper
+ * **📊 Summary JSON:** Hasil lengkap disimpan ke summary.json + transcript.json
+
+### **⚙️ Install Tambahan:**
+```bash
+pip install openai-whisper yt-dlp
+pkg install ffmpeg -y
+```
+
+> **⚠️ PENTING:** Model Whisper `small` butuh RAM ~500MB dan waktu ~2-3x durasi video. Pastikan HP tidak kehabisan RAM saat proses berjalan.
+
+### **🚀 Cara Pakai:**
+
+**Dari URL YouTube (paling mudah):**
+```bash
+python video_clipper.py "https://youtu.be/XXXXXXXXXXXX"
+```
+
+**Dari file video lokal:**
+```bash
+python video_clipper.py /sdcard/Download/video.mp4
+```
+
+**Tentukan jumlah clip & durasi:**
+```bash
+python video_clipper.py "URL" --clips 8 --min-duration 30 --max-duration 60
+```
+
+**Paksa bahasa Indonesia (hasil lebih akurat):**
+```bash
+python video_clipper.py "URL" --language id
+```
+
+**Tanpa burn subtitle (file .srt disimpan terpisah):**
+```bash
+python video_clipper.py "URL" --no-subtitle
+```
+
+**Pilih model Whisper lebih besar:**
+```bash
+python video_clipper.py "URL" --model medium
+```
+
+**Simpan ke folder tertentu:**
+```bash
+python video_clipper.py "URL" --output /sdcard/Download/clips
+```
+
+**Tampilkan contoh lengkap:**
+```bash
+python video_clipper.py --examples
+```
+
+### **🎛️ Semua Options:**
+| Option | Default | Fungsi |
+|--------|---------|--------|
+| `input` | *(wajib)* | URL YouTube atau path file lokal |
+| `--clips, -n` | 5 | Jumlah clip yang dibuat |
+| `--min-duration` | 20 | Durasi minimum tiap clip (detik) |
+| `--max-duration` | 90 | Durasi maksimum tiap clip (detik) |
+| `--model, -m` | small | Model Whisper: tiny/base/small/medium/large-v2/turbo |
+| `--language, -l` | auto | Kode bahasa: `id`, `en`, `ja`, dll |
+| `--output, -o` | ~/storage/downloads/video_clips/ | Folder output |
+| `--no-subtitle` | false | Jangan burn subtitle ke video |
+| `--keep` | true | Simpan video asli |
+| `--examples` | — | Tampilkan contoh penggunaan |
+
+### **📁 Struktur Output:**
+```
+video_clips/
+└── 20250407_143022/          ← folder per sesi
+    ├── video_asli.mp4        ← video yang didownload
+    ├── transcript.json       ← hasil transkripsi lengkap
+    ├── summary.json          ← ringkasan semua clip
+    ├── clip_01_00m00s.mp4   ← clip 1 (sudah ada subtitle)
+    ├── clip_01_00m00s.srt   ← subtitle clip 1 (terpisah)
+    ├── clip_02_03m15s.mp4   ← clip 2
+    └── ...
+```
+
+### **⚡ Perbandingan Model Whisper:**
+| Model | RAM | Waktu* | Akurasi |
+|-------|-----|--------|---------|
+| `tiny` | ~150MB | ~0.5x | ⭐⭐ |
+| `base` | ~250MB | ~1x | ⭐⭐⭐ |
+| `small` | ~500MB | ~2-3x | ⭐⭐⭐⭐ ✅ **(Recommended)** |
+| `medium` | ~1.5GB | ~4-6x | ⭐⭐⭐⭐⭐ |
+| `large` | ~3GB | ~8-10x | ⭐⭐⭐⭐⭐ ⚠️ (Berat di HP) |
+
+*\*Estimasi waktu relatif terhadap durasi video*
 
 ---
 
@@ -371,7 +502,8 @@ bototp-main/
 ├── whois_lookup.py        # Whois/IP Lookup Tool
 ├── qrcode_tool.py         # QR Code Generator & Reader
 ├── file_organizer.py      # File Organizer Otomatis
-└── sysinfo.py             # Sistem Info Dashboard ⭐ NEW
+├── sysinfo.py             # Sistem Info Dashboard
+└── video_clipper.py       # Video Clipper + Subtitle ⭐ NEW
 ```
 
 ---
