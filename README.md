@@ -16,12 +16,13 @@ termux-setup-storage
 ### **2. Update Termux & Install Semua Kebutuhan (Python, Git, FFmpeg, dll):**
 ```bash
 pkg update && pkg upgrade -y
-pkg install python git libjpeg-turbo ffmpeg yt-dlp zbar -y
+pkg install python git libjpeg-turbo ffmpeg yt-dlp zbar termux-api -y
 ```
 
 > **⚠️ PENTING:** 
 > - **FFmpeg** wajib diinstall buat downloader video! Tanpa FFmpeg, download video YouTube/sosmed bakal error.
 > - **zbar** diperlukan buat QR Code reader (decode QR dari gambar).
+> - **termux-api** diperlukan buat fitur baterai & WiFi di Sistem Info Dashboard.
 
 ### **3. Clone Repository Ini & Masuk ke Foldernya:**
 ```bash
@@ -220,6 +221,74 @@ python file_organizer.py --clean
 
 ---
 
+## 6️⃣ 📊 Sistem Info Dashboard (sysinfo.py)
+
+Dashboard lengkap buat ngecek semua info HP dan sistem lo langsung dari terminal. Mulai dari CPU, RAM, storage, baterai, sampai info jaringan & IP publik — semua dalam satu script!
+
+### **✨ Fitur:**
+ * **📱 Info Perangkat:** Model HP, versi Android, kernel, arsitektur, shell
+ * **⏱️ Uptime:** Lama device nyala, load average, tanggal & waktu
+ * **🔧 CPU:** Nama prosesor, jumlah core, frekuensi, governor, CPU usage real-time, top proses
+ * **🧠 RAM:** Total/terpakai/tersedia + progress bar berwarna, info SWAP
+ * **💾 Storage:** Internal, SD card, Termux home — semua auto-detect
+ * **🔋 Baterai:** Level + bar, status charging, suhu, kesehatan baterai, voltase
+ * **🌐 Jaringan:** IP lokal tiap interface, IP publik + lokasi + ISP, DNS, WiFi SSID + sinyal
+ * **📡 Ping Test:** Test latency ke Google DNS, Cloudflare, dan Google.com
+ * **⚙️ Proses:** Top 5 proses berdasarkan penggunaan memori
+ * **📋 Ringkasan:** Summary singkat semua resource di akhir
+
+### **⚙️ Requirement Tambahan:**
+```bash
+pkg install termux-api -y
+```
+> Termux:API diperlukan untuk info baterai detail dan WiFi SSID/sinyal.
+
+### **🚀 Cara Pakai:**
+
+**Tampilkan Semua Info (Default):**
+```bash
+python sysinfo.py
+```
+
+**Ringkasan Cepat:**
+```bash
+python sysinfo.py --quick
+```
+
+**Info CPU Saja:**
+```bash
+python sysinfo.py --cpu
+```
+
+**Info Jaringan + Ping:**
+```bash
+python sysinfo.py --network --ping
+```
+
+**Info Baterai + Storage:**
+```bash
+python sysinfo.py --battery --storage
+```
+
+**Bantuan / Help:**
+```bash
+python sysinfo.py --help
+```
+
+### **🎛️ Semua Options:**
+| Option | Fungsi |
+|--------|--------|
+| *(tanpa opsi)* | Tampilkan semua info |
+| `--quick` | Ringkasan singkat saja |
+| `--cpu` | Info CPU & penggunaan |
+| `--network` | Info jaringan & IP |
+| `--battery` | Info baterai |
+| `--storage` | Info penyimpanan |
+| `--ping` | Ping test ke server umum |
+| `--help` | Tampilkan panduan |
+
+---
+
 ## 🔧 Troubleshooting
 
 ### **Error: "ffmpeg is not installed"**
@@ -261,6 +330,20 @@ Pastikan:
 - Format gambar didukung (jpg, png)
 - Coba crop gambar biar fokus ke QR aja
 
+### **sysinfo.py: Info baterai tidak muncul / tidak lengkap**
+Install Termux:API:
+```bash
+pkg install termux-api -y
+```
+Pastikan juga aplikasi **Termux:API** sudah diinstall di HP (bukan cuma package-nya).
+
+### **sysinfo.py: IP Publik tidak bisa diambil**
+Kemungkinan koneksi internet sedang bermasalah. Coba jalankan:
+```bash
+python sysinfo.py --ping
+```
+untuk cek apakah device bisa reach internet.
+
 ---
 
 ## 📝 Requirements
@@ -269,6 +352,7 @@ Pastikan:
 - **Python 3.x** (auto-install via `pkg install python`)
 - **FFmpeg** (wajib buat merge video+audio)
 - **zbar** (wajib buat QR code reader)
+- **termux-api** (wajib buat fitur baterai & WiFi di sysinfo.py)
 - **yt-dlp** (auto-install via requirements.txt)
 - **Pillow** (buat ASCII art & QR code)
 - **qrcode** (buat generate QR)
@@ -283,10 +367,11 @@ bototp-main/
 ├── README.md              # Dokumentasi (file ini)
 ├── requirements.txt       # Python dependencies
 ├── ascii_maker.py         # ASCII Art Generator
-├── dwnld.py              # Sosmed Video Downloader
-├── whois_lookup.py       # Whois/IP Lookup Tool
-├── qrcode_tool.py        # QR Code Generator & Reader
-└── file_organizer.py     # File Organizer Otomatis
+├── dwnld.py               # Sosmed Video Downloader
+├── whois_lookup.py        # Whois/IP Lookup Tool
+├── qrcode_tool.py         # QR Code Generator & Reader
+├── file_organizer.py      # File Organizer Otomatis
+└── sysinfo.py             # Sistem Info Dashboard ⭐ NEW
 ```
 
 ---
