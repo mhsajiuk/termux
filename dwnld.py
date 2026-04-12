@@ -41,10 +41,6 @@ def download_media(url, audio_only=False, with_thumbnail=False):
     },
 }
 
-        # Biar gak kelihatan terlalu bar-bar nyedot datanya
-        'sleep_interval': 2,
-    }
-
     print("\n" + "="*50)
     print("🚀 ULTIMATE SOSMED DOWNLOADER")
     print("="*50)
